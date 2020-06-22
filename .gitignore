@@ -1,0 +1,4 @@
+node_modules/
+public/index.html.work
+package-lock.json
+npm-debug.log
