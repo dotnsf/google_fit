@@ -2,6 +2,7 @@
 <html lang="ja">
 <head></head>
 <body>
+<script type="text/javascript" src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
 <script src="https://apis.google.com/js/client.js"></script>
 <script>
 const client_id = 'your_client_id';
@@ -16,12 +17,13 @@ function getToken() {
 function mycallback(e) {
     access_token = e.access_token;
     //alert( 'access_token = ' + access_token );
-    console.log(e);
+    //console.log(e);
     fetch('https://www.googleapis.com/fitness/v1/users/me/dataSources?access_token=' + access_token)
         .then(response => {
             return response.json();
         })
         .then(json => {
+            //console.log(json);
             getSteps( json.dataSource );
         })
 }
@@ -31,16 +33,64 @@ function getSteps( dataSources ) {
     console.log(new Date(start));
     console.log(new Date(end));
 
-    //fetch('https://www.googleapis.com/fitness/v1/users/me/dataSources/derived:com.google.activity.segment:com.google.android.gms:Google:Pixel 3:********:activity_from_steps/datasets/'+start.toString()+'000000'+'-'+end.toString()+'000000?access_token=' + access_token)
-    fetch('https://www.googleapis.com/fitness/v1/users/me/dataSources/' + dataSources[3].dataStreamId + '/datasets/'+start.toString()+'000000'+'-'+end.toString()+'000000?access_token=' + access_token)
-        .then(response => {
-            return response.json();
-        })
-        .then(json => {
-            console.log(json);
-        })
+    dataSources.forEach( function( dataSource ){
+      var id = dataSource.dataStreamId;
+      var _id = id.split( ":" ).join( '_' ).split( '<' ).join( '_' ).split( '.' ).join( '_' );
+      var div = '<div><a href="javascript:void(0)" id="category_' + _id + '" onClick="show(\'' + _id + '\');">' + _id + '</a>'
+        + '<div id="layer_' + _id + '" style="display:none; position: relative; margin-left:15pt;" class="close"></div></div>';
+      $('body').append( div );
+
+      fetch('https://www.googleapis.com/fitness/v1/users/me/dataSources/' + id + '/datasets/'+start.toString()+'000000'+'-'+end.toString()+'000000?access_token=' + access_token)
+          .then(response => {
+              return response.json();
+          })
+          .then(json => {
+              //console.log(json);
+              var content = '';
+              var points = json.point;
+              var _id = json.dataSourceId.split( ":" ).join( '_' ).split( '<' ).join( '_' ).split( '.' ).join( '_' );
+              for( var i = 0; i < points.length; i ++ ){
+                var point = points[i];
+                var ts = parseInt( point.modifiedTimeMillis );
+                var datetime = timestamp2datetime( ts );
+                content += '[' + i + '] ' + datetime + ' : ' + point.value[0].intVal + '<br/>';
+              }
+              $('#layer_'+_id).append( content );
+          });
+    });
+
 }
 window.onload = getToken;
+
+function show( id ){
+  var objID = document.getElementById( "layer_" + id );
+  var buttonID = document.getElementById( "category_" + id );
+  if( objID.className == 'close' ){
+    objID.style.display = 'block';
+    objID.className = 'open';
+  }else{
+    objID.style.display = 'none';
+    objID.className = 'close';
+  }
+}
+
+function timestamp2datetime( ts ){
+  var dt = new Date( ts );
+  var y = dt.getFullYear();
+  var m = dt.getMonth() + 1;
+  var d = dt.getDate();
+  var h = dt.getHours();
+  var n = dt.getMinutes();
+  var s = dt.getSeconds();
+
+  var datetime = y
+    + '/' + ( m < 10 ? '0' : '' ) + m
+    + '/' + ( d < 10 ? '0' : '' ) + d
+    + ' ' + ( h < 10 ? '0' : '' ) + h
+    + ':' + ( n < 10 ? '0' : '' ) + n
+    + ':' + ( s < 10 ? '0' : '' ) + s;
+  return datetime;
+}
 </script>
 </body>
 </html>
