@@ -36,7 +36,7 @@ function getSteps( dataSources ) {
     dataSources.forEach( function( dataSource ){
       var id = dataSource.dataStreamId;
       var _id = id.split( ":" ).join( '_' ).split( '<' ).join( '_' ).split( '.' ).join( '_' );
-      var div = '<div><a href="javascript:void(0)" id="category_' + _id + '" onClick="show(\'' + _id + '\');">' + _id + '</a>'
+      var div = '<div><a href="javascript:void(0)" id="category_' + _id + '" onClick="show(\'' + _id + '\');">' + id + '</a>'
         + '<div id="layer_' + _id + '" style="display:none; position: relative; margin-left:15pt;" class="close"></div></div>';
       $('body').append( div );
 
